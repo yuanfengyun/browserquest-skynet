@@ -1,0 +1,3 @@
+tools\luacheck.exe -q service
+
+pause...
