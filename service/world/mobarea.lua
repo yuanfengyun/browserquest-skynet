@@ -1,13 +1,19 @@
 
 local class = require "class"
 local Area = require "area"
-local Types = require "types"
+local Types = require "share"
 local Mob = require "mob"
 
 local M = class.Class(Area)
 
+function M.new(...)
+    local o = setmetatable({},M)
+    o:init(...)
+    return o
+end
+
 function M:init(id, nb, kind, x, y, width, height, world)
-    self._super(id, x, y, width, height, world)
+    M._base.init(self,id, x, y, width, height, world)
     self.nb = nb
     self.kind = kind
     self.respawns = {}
@@ -29,9 +35,9 @@ end
 function M:_createMobInsideArea()
     local k = Types.getKindFromString(self.kind)
     local pos = self:_getRandomPositionInsideArea()
-    local mob = Mob.new('1' + self.id + ''+ k + ''+ self.entities.length, k, pos.x, pos.y)
+    local mob = Mob.new('1' .. self.id .. ''.. k .. ''.. #self.entities, k, pos.x, pos.y)
     
-    mob:onMove(self.world.onMobMoveCallback.bind(self.world))
+    mob:onMove(function () self.world:onMobMoveCallback(mob) end)
 
     return mob
 end
@@ -45,8 +51,8 @@ function M:respawnMob(mob, delay)
         mob.x = pos.x
         mob.y = pos.y
         mob.isDead = false
-        self.addToArea(mob)
-        self.world.addMob(mob)
+        self:addToArea(mob)
+        self.world:addMob(mob)
     end, delay)
 end
 
@@ -55,13 +61,13 @@ function M:initRoaming(mob)
         for _,mod in pairs(self.entities) do
             local canRoam = math.random(20) == 1
             if canRoam then
-                if ~mob.hasTarget() and ~mob.isDead then
+                if not mob.hasTarget() and not mob.isDead then
                     local pos = self:_getRandomPositionInsideArea()
                     mob:move(pos.x, pos.y)
                 end
             end
         end
-    end, 500)
+    end, 50)
 end
 
 function M:createReward()

@@ -3,7 +3,13 @@ local Types = require("share")
 
 local M = {}
 
-M.init = function()
+function M.new()
+    local o = {}
+    setmetatable(o,M)
+    return o
+end
+
+function M:init()
     self.formats = {}
     self.formats[Types.Messages.HELLO] = {'s', 'n', 'n'}
     self.formats[Types.Messages.MOVE] = {'n', 'n'}
@@ -20,7 +26,7 @@ M.init = function()
     self.formats[Types.Messages.CHECK] = {'n'}
 end
         
-M.check = function(msg)
+function M:check(msg)
     local message = msg.slice(0)
     local type = message[0]
     local format = self.formats[type]

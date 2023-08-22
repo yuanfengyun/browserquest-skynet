@@ -1,16 +1,18 @@
 local class = require "class"
 local Character = require "character"
-local Messages = require "Messages"
-local Properties = require "Properties"
+local Messages = require "message"
+local Properties = require "propertites"
 local Utils = require "utils"
 local M = class.Class(Character)
 
-function M.new()
-    return setmetatable({},M)
+function M.new(...)
+    local o = setmetatable({},M)
+    o:init(...)
+    return o
 end
 
 function M:init(id, kind, x, y)
-    self._base.init(self,id, "mob", kind, x, y)
+    M._base.init(self,id, "mob", kind, x, y)
     
     self:updateHitPoints()
     self.spawningX = x
@@ -57,7 +59,7 @@ function M:increaseHateFor(playerId, points)
             end
         end
     else
-        self.hatelist.push({ id= playerId, hate=points })
+        table.insert(self.hatelist,{ id= playerId, hate=points })
     end
     
     if self.returnTimeout then
@@ -113,14 +115,14 @@ function M:handleRespawn()
     local delay = 30000
     if self.area and self.area:getType() == "mobarea" then
         -- Respawn inside the area if part of a MobArea
-        self.area.respawnMob(self, delay)
+        self.area:respawnMob(self, delay)
     else
         if self.area and self.area:getType() == "chestarea" then
-            self.area.removeFromArea(self)
+            self.area:removeFromArea(self)
         end
         setTimeout(function()
             if self.respawn_callback then
-                self.respawn_callback()
+                self:respawn_callback()
             end
         end, delay)
     end

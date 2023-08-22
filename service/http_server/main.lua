@@ -14,7 +14,7 @@ skynet.start(function()
 	local lid = socket.listen("0.0.0.0", 8001)
 	skynet.error(string.format("Listen web port 8001 protocol:%s", protocol))
 	socket.start(lid , function(id, addr)
-		skynet.error(string.format("%s connected, pass it to agent :%08x", addr, agent[balance]))
+		--skynet.error(string.format("%s connected, pass it to agent :%08x", addr, agent[balance]))
 		skynet.send(agent[balance], "lua", id)
 		balance = balance + 1
 		if balance > #agent then

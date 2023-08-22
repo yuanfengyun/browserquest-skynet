@@ -1,11 +1,11 @@
 
 local Utils = {}
 local Types = require("share");
-local sanitizer = require('sanitizer')
+--local sanitizer = require('sanitizer')
 
 Utils.sanitize = function(string)
 -- Strip unsafe tags, then escape as html entities.
-    return sanitizer.escape(sanitizer.sanitize(string))
+    return string --sanitizer.escape(sanitizer.sanitize(string))
 end
 
 Utils.random = function(range)

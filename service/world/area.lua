@@ -37,20 +37,20 @@ function M:removeFromArea(entity)
     
     if self.isEmpty() and self.hasCompletelyRespawned and self.empty_callback then
         self.hasCompletelyRespawned = false
-        self.empty_callback()
+        self:empty_callback()
     end
 end
 
 function M:addToArea(entity)
     if entity then
-        self.entities.push(entity)
+        table.insert(self.entities,entity)
         entity.area = self
         if entity:getType() == "mob" then
             self.world:addMob(entity)
         end
     end
     
-    if self.isFull() then
+    if self:isFull() then
         self.hasCompletelyRespawned = true
     end
 end
@@ -71,7 +71,7 @@ function M:isEmpty()
 end
 
 function M:isFull()
-    return not self.isEmpty() and (self.nbEntities == _.size(self.entities))
+    return not self:isEmpty() and (self.nbEntities == #self.entities)
 end
 
 function M:onEmpty(callback)

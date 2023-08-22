@@ -3,12 +3,14 @@ local item = require "item"
 
 local M = class.Class(item)
 
-function M.new()
-    return setmetatable({},M)
+function M.new(...)
+    local o = setmetatable({},M)
+    o:init(...)
+    return o
 end
 
 function M:init(id,kind,x,y)
-    self._super.init(self,id,"npc",kind,x,y)
+    M._base.init(self,id,"npc",kind,x,y)
 end
 
 return M

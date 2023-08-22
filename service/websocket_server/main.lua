@@ -12,11 +12,11 @@ skynet.start(function ()
 	end
 	local balance = 1
 	local protocol = "ws"
-	local lid = socket.listen("0.0.0.0", 8000)
+	local lid = socket.listen("0.0.0.0", 9000)
 	skynet.error(string.format("Listen websocket port 8000 protocol:%s", protocol))
 	socket.start(lid, function(id, addr)
 		print(string.format("accept websocket socket_id: %s addr:%s", id, addr))
-		skynet.send(agent[balance], "lua", id, protocol, addr)
+		skynet.send(agent[balance], "lua","connect",id, addr)
 		balance = balance + 1
 		if balance > #agent then
 			balance = 1

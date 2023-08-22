@@ -3,8 +3,14 @@ local Area = require "area"
 
 local M = class.Class(Area)
 
+function M.new(...)
+    local o = setmetatable({},M)
+    o:init(...)
+    return o
+end
+
 function M:init(id, x, y, width, height, cx, cy, items, world)
-    self._base:init(self,id, x, y, width, height, world)
+    M._base.init(self,id, x, y, width, height, world)
     self.items = items
     self.chestX = cx
     self.chestY = cy

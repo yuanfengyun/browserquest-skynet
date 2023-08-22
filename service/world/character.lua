@@ -1,65 +1,97 @@
 local class = require "class"
 local Entity = require "entity"
-local Messages = require "Messages"
+local Messages = require "message"
+
+
+local Utils = require("utils")
+local Properties = require("propertites")
+local Types = require("share")
+
 
 local M = class.Class(Entity)
 
 function M:init(id, type, kind, x, y)
-    self.id = tonumber(id)
-    self.type = type
-    self.kind = kind
-    self.x = x
-    self.y = y
+    M._base.init(self,id, type, kind, x, y)
+    
+    self.orientation = Utils.randomOrientation()
+    self.attackers = {}
+    self.target = nil
 end
-
-function M:destroy()
-
-end
-
-function M:_getBaseState()
-    return {
-        tonumber(self.id),
-        self.kind,
-        self.x,
-        self.y
-    }
-end
-
+    
 function M:getState()
-    return self:_getBaseState()
-end
-
-function M:spawn()
-    return Messages.Spawn.new(self)
-end
-
-function M:despawn()
-    return Messages.Despawn.new(self.id)
-end
-
-function M:setPosition(x, y)
-    self.x = x
-    self.y = y
-end
-
-function M:getPositionNextTo(entity)
-    local pos = nil
-    if entity then
-        pos = {x = entity.x,y = entity.y}
-        -- This is a quick & dirty way to give mobs a random position
-        -- close to another entity.
-        local r = math.random(0,3)
-        if r == 0 then
-            pos.y = pos.y - 1
-        elseif r == 1 then
-            pos.y = pos.y + 1
-        elseif r == 2 then
-            pos.x = pos.x - 1
-        elseif r == 3 then
-            pos.x = pos.x + 1
+        local basestate = self:_getBaseState()
+        local state = {self.orientation}
+        
+        if(self.target) then
+            table.insert(state,self.target)
+        end
+        
+        return basestate.concat(state)
+    end
+    
+    function M:resetHitPoints(maxHitPoints)
+        self.maxHitPoints = maxHitPoints
+        self.hitPoints = self.maxHitPoints
+    end
+    
+    function M:regenHealthBy(value)
+        local hp = self.hitPoints
+        local max = self.maxHitPoints
+            
+        if(hp < max) then
+            if(hp + value <= max) then
+                self.hitPoints = value + self.hitPoints
+            else
+                self.hitPoints = max;
+            end
         end
     end
-    return pos
-end
+    
+    function M:hasFullHealth()
+        return self.hitPoints == self.maxHitPoints
+    end
+    
+    function M:setTarget(entity)
+        self.target = entity.id
+    end
+    
+    function M:clearTarget()
+        self.target = nil
+    end
+    
+    function M:hasTarget()
+        return self.target ~= nil
+    end
+    
+    function M:attack()
+        return Messages.Attack.new(self.id, self.target)
+    end
+    
+    function M:health()
+        return Messages.Health.new(self.hitPoints, false)
+    end
+    
+    function M:regen()
+        return Messages.Health.new(self.hitPoints, true);
+    end
+    
+    function M:addAttacker(entity)
+        if(entity) then
+            self.attackers[entity.id] = entity
+        end
+    end
+    
+    function M:removeAttacker(entity) 
+        if entity and inin( entity.id , self.attackers) then
+            self.attackers[entity.id] = nil
+            --log.debug(self.id +" REMOVED ATTACKER "+ entity.id);
+        end
+    end
+    
+    function M:forEachAttacker(callback)
+        for id,_ in pairs(self.attackers) do
+            callback(self.attackers[id])
+        end
+    end
 
-return M
+    return M

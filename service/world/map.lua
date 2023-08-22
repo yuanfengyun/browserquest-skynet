@@ -11,13 +11,16 @@ end
 
 local M = {}
 
-function M.new()
-    return setmetatable({},{__index=M})
+function M.new(name)
+    local o = setmetatable({},{__index=M})
+    o:init(name)
+    return o
 end
 
 function M:init(name)
     self.isLoaded = false
     self.path = name
+    self:load()
 end
 
 function M:load()
@@ -44,16 +47,12 @@ function M:initMap(data)
     self.groupWidth = math.floor(self.width / self.zoneWidth)
     self.groupHeight = math.floor(self.height / self.zoneHeight)
 
-    self.initConnectedGroups(data.doors)
-    self.initCheckpoints(data.checkpoints)
-
-    if self.ready_func then
-        self.ready_func()
-    end
+    self:initConnectedGroups(data.doors)
+    self:initCheckpoints(data.checkpoints)
 end
 
 function M:ready(f)
-    self.ready_func = f
+    f()
 end
 
 function M:tileIndexToGridPosition(tileNum)
@@ -64,7 +63,7 @@ function M:tileIndexToGridPosition(tileNum)
         if(num == 0) then
             return 0
         end
-        return (num % w == 0) and (w - 1)  ((num % w) - 1)
+        return (num % w == 0) and (w - 1) or ((num % w) - 1)
     end
 
     tileNum = tileNum - 1
@@ -102,16 +101,16 @@ function M:isOutOfBounds(x, y)
 end
 
 function M:isColliding (x, y)
-    if self.isOutOfBounds(x, y) then
+    if self:isOutOfBounds(x, y) then
         return false
     end
     return self.grid[y][x] == 1
 end
 
 function M:GroupIdToGroupPosition(id)
-    local posArray = id.split('-')
+    local posArray = string_split(id,'-')
 
-    return pos(tonumber(posArray[0]), tonumber(posArray[1]))
+    return pos(tonumber(posArray[1]), tonumber(posArray[2]))
 end
 
 function M:forEachGroup(callback)
@@ -144,49 +143,56 @@ function M:getAdjacentGroupPositions(id)
                 pos(x-1, y+1), pos(x, y+1), pos(x+1, y+1)}
     
     -- groups connected via doors
-    for position1,_ in pairs(self.connectedGroups[id]) do
+    for _,position1 in pairs(self.connectedGroups[id] or {}) do
         -- don't add a connected group if it's already part of the surrounding ones.
+        local equal = false
         for _,groupPos in ipairs(list) do
             if equalPositions(groupPos, position1) then
-                list.push(position1)
+                equal = true
                 break
             end
         end
+        if not equal then
+            table.insert(list,position1)
+        end
     end
     
+    local ret = {}
     for _,p in ipairs(list) do
         if p.x < 0 or p.y < 0 or p.x >= self.groupWidth or p.y >= self.groupHeight then
 
         else
-            return p
+            table.insert(ret,p)
         end
     end
+
+    return ret
 end
 
 function M:forEachAdjacentGroup(groupId, callback)
     if groupId then
-        for _,v in pairs(self.getAdjacentGroupPositions(groupId)) do
+        for _,v in pairs(self:getAdjacentGroupPositions(groupId)) do
             callback(tostring(v.x)..'-'..tostring(v.y))
         end
     end
 end
 
-function M.initConnectedGroups(doors)
+function M:initConnectedGroups(doors)
     self.connectedGroups = {}
     for _,door in pairs(doors) do
-        local groupId = self.getGroupIdFromPosition(door.x, door.y)
-        local connectedGroupId = self.getGroupIdFromPosition(door.tx, door.ty)
-        local connectedPosition = self.GroupIdToGroupPosition(connectedGroupId)
+        local groupId = self:getGroupIdFromPosition(door.x, door.y)
+        local connectedGroupId = self:getGroupIdFromPosition(door.tx, door.ty)
+        local connectedPosition = self:GroupIdToGroupPosition(connectedGroupId)
         
         if self.connectedGroups[groupId] then
-            self.connectedGroups[groupId].push(connectedPosition)
+            table.insert(self.connectedGroups[groupId],connectedPosition)
         else
             self.connectedGroups[groupId] = {connectedPosition}
         end
     end
 end
 
-function initCheckpoints(cpList)
+function M:initCheckpoints(cpList)
     self.checkpoints = {}
     self.startingAreas = {}
     
@@ -205,10 +211,10 @@ end
 
 function M:getRandomStartingPosition()
     local nbAreas = #(self.startingAreas)
-    local i = math.random(0, nbAreas-1)
+    local i = math.random(1, nbAreas)
     local area = self.startingAreas[i]
     
-    return area.getRandomPosition()
+    return area:getRandomPosition()
 end
 
 

@@ -12,20 +12,15 @@ end
 
 function handle.handshake(id, header, url)
 	local addr = websocket.addrinfo(id)
-	print("ws handshake from: " .. tostring(id), "url", url, "addr:", addr)
-	print("----header-----")
-	for k,v in pairs(header) do
-		print(k,v)
-	end
-	print("--------------")
-	websocket.write(id, "go")
+	skynet.send(".world","lua","connect",skynet.self(),id)
 end
 
 function handle.message(id, msg, msg_type)
 	assert(msg_type == "binary" or msg_type == "text")
 	skynet.error(msg_type.." "..msg)
 	local package = json.decode(msg)
-    skynet.send("world","lua","message",skynet.self(),id,package)
+	print("recv:",msg)
+    skynet.send(".world","lua","message",skynet.self(),id,package)
 end
 
 function handle.ping(id)
@@ -38,20 +33,34 @@ end
 
 function handle.close(id, code, reason)
 	print("ws close from: " .. tostring(id), code, reason)
+	skynet.send(".world","lua","onclose",skynet.self(),id)
 end
 
 function handle.error(id)
 	print("ws error from: " .. tostring(id))
 end
 
+local CMD = {}
+
+function CMD.connect(id,addr)
+	local ok, err = websocket.accept(id, handle, "ws", addr)
+	if not ok then
+		print(err)
+	end
+end
+
+function CMD.send(id,msg)
+	if type(msg) == "table" then
+        msg = json.encode(msg)
+    end
+	print("send to client:",msg)
+	websocket.write(id, msg)
+end
+
 skynet.start(function ()
-	skynet.dispatch("lua", function (_,_, id, cmd,...)
-		if cmd == "connect" then
-			local protocol, addr = table.unpack({...})
-			local ok, err = websocket.accept(id, handle, protocol, addr)
-			if not ok then
-				print(err)
-			end
-	    end
+	skynet.dispatch("lua", function (_,_, cmd,...)
+		print("cmd",cmd)
+		local f = CMD[cmd]
+		f(...)
 	end)
 end)

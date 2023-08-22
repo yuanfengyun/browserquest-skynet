@@ -1,4 +1,4 @@
-local Types = require "types"
+local Types = require "share"
 
 local M = {}
 

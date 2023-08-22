@@ -158,7 +158,7 @@ local kinds = {
 }
 
 kinds.getType= function(kind)
-    return kinds[Types.getKindAsString(kind)][1]
+    return kinds[Types.getKindAsString(kind)][2]
 end
 
 Types.rankedWeapons = {
@@ -223,7 +223,7 @@ end
 Types.isItem = function(kind)
     return Types.isWeapon(kind) 
         or Types.isArmor(kind) 
-        or (Types.isObject(kind) and ~Types.isChest(kind))
+        or (Types.isObject(kind) and not Types.isChest(kind))
     end
 
 Types.isHealingItem = function(kind)
@@ -240,13 +240,13 @@ Types.isExpendableItem = function(kind)
 Types.getKindFromString = function(kind)
     local v = kinds[kind]
     if v then
-        return v[0]
+        return v[1]
     end
 end
 
 Types.getKindAsString = function(kind)
     for k,v in pairs(kinds) do
-        if v[0] == kind then
+        if type(v) == "table" and v[1] == kind then
             return k
         end
     end
@@ -254,7 +254,7 @@ end
 
 Types.forEachKind = function(callback)
     for k,_ in pairs(kinds) do
-        callback(kinds[k][0], k)
+        callback(kinds[k][1], k)
     end
 end
 

@@ -32,6 +32,9 @@ local function gen_interface(proto, fd)
 end
 
 local function load_file(path)
+	if path == "/" or path == "" then
+		path = "/index.html"
+	end
 	local filename = "./client"..path
 	local file = io.open (filename,"rb")
 	if not file then

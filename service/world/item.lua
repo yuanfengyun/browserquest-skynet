@@ -3,12 +3,14 @@ local Entity = require "entity"
 
 local M = class.Class(Entity)
 
-function M.new()
-    return setmetatable({},M)
+function M.new(...)
+    local o = setmetatable({},M)
+    o:init(...)
+    return o
 end
 
 function M:init(id, kind, x, y)
-     self._super(self,id,"item",kind,x,y)
+     M._base.init(self,id,"item",kind,x,y)
      self.isStatic = false
      self.isFromChest = false
 end

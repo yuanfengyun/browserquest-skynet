@@ -1,4 +1,4 @@
-local Messages = require "Message"
+local Messages = require "message"
 
 local M = {}
 

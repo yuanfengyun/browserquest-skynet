@@ -23,4 +23,22 @@ function M.Class(base)
     return c
 end
 
+function instanceof(a,b)
+    local meta = getmetatable(a)
+    local base = meta
+    while base do
+        if base == b then
+            return true
+        end
+
+        if base._base then
+            base = base._base
+        else
+            break
+        end
+    end
+
+    return false
+end
+
 return M

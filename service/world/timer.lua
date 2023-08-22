@@ -9,7 +9,7 @@ function M.setTimeout(f,t)
     M.id = M.id + 1
     local id = M.id
 
-    skynet.timeout(t,function() M.callback(id) end)
+    skynet.timeout(math.floor(t),function() M.callback(id) end)
 
     M.map[id] = f
 
@@ -29,7 +29,7 @@ function M.clearTimeout(id)
     M.map[id] = nil
 end
 
-setInterval = function(t,f)
+setInterval = function(f,t)
     local ff
     ff = function()
         skynet.timeout(t,ff)
